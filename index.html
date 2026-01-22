@@ -1,101 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mk">
 <head>
-  <meta charset="UTF-8" />
-  <title>Podcast Website</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Official podcast website – episodes and seasons" />
-
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0f1115;
-      color: #ffffff;
-    }
-    header {
-      padding: 24px;
-      border-bottom: 1px solid #222;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-    main {
-      padding: 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    section {
-      margin-bottom: 48px;
-    }
-    h2 {
-      margin-bottom: 16px;
-      font-size: 20px;
-    }
-    .episodes {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-    }
-    .episode {
-      background: #171a21;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #222;
-    }
-    .episode img {
-      width: 100%;
-      display: block;
-    }
-    .episode div {
-      padding: 12px;
-    }
-    .episode h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-    .episode span {
-      font-size: 13px;
-      opacity: 0.7;
-    }
-    footer {
-      padding: 24px;
-      border-top: 1px solid #222;
-      text-align: center;
-      opacity: 0.6;
-      font-size: 14px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 
+        ✏️ EDIT: Change your podcast name and description here 
+    -->
+    <title>Мој Подкаст - Home</title>
+    <meta name="description" content="Најдобриот подкаст за технологија и иновации">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-
 <body>
-  <header>
-    <h1>🎙 Podcast Website</h1>
-  </header>
-
-  <main>
-    <section>
-      <h2>Latest Episode</h2>
-      <p>This will be loaded automatically from RSS.</p>
-    </section>
-
-    <section>
-      <h2>Latest Episodes</h2>
-      <div class="episodes">
-        <div class="episode">
-          <img src="https://via.placeholder.com/640x360?text=Episode+Thumbnail" />
-          <div>
-            <h3>Episode title</h3>
-            <span>Season · Episode</span>
-          </div>
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="container">
+            <nav class="nav">
+                <!-- 
+                    ✏️ EDIT: Change podcast name/logo here 
+                -->
+                <a href="index.html" class="logo">🎙️ Мој Подкаст</a>
+                <ul class="nav-menu">
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="episodes.html">Episodes</a></li>
+                </ul>
+            </nav>
         </div>
-      </div>
-    </section>
-  </main>
+    </header>
 
-  <footer>
-    Podcast Website · Demo build
-  </footer>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <!-- 
+                ✏️ EDIT: Change hero text here 
+            -->
+            <h1 class="hero-title">Добредојдовте на Мој Подкаст</h1>
+            <p class="hero-description">
+                Секоја недела донесуваме нови епизоди со најдобрите гости од индустријата
+            </p>
+        </div>
+    </section>
+
+    <!-- Latest Episode Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Последна Епизода</h2>
+            <!-- 
+                🔧 AUTO-POPULATED: This will be filled by app.js 
+                Data comes from: latest episode in data/season*.json
+            -->
+            <div id="latest-episode" class="latest-episode-container">
+                <!-- JavaScript will render here -->
+                <div class="loading">Се вчитува...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Latest 6 Episodes Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Скорешни Епизоди</h2>
+            <!-- 
+                🔧 AUTO-POPULATED: This will be filled by app.js 
+                Data comes from: latest 6 episodes sorted by date
+            -->
+            <div id="latest-episodes" class="episodes-grid">
+                <!-- JavaScript will render here -->
+                <div class="loading">Се вчитува...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <!-- 
+                ✏️ EDIT: Add your social links and copyright info 
+            -->
+            <div class="footer-content">
+                <p>&copy; 2026 Мој Подкаст. Сите права задржани.</p>
+                <div class="social-links">
+                    <!-- Add your social media links -->
+                    <a href="#" target="_blank">YouTube</a>
+                    <a href="#" target="_blank">Spotify</a>
+                    <a href="#" target="_blank">Instagram</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load JavaScript -->
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>
