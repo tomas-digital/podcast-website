@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Епизода - Мој Подкаст</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="logo">🎙️ Мој Подкаст</a>
+                <ul class="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="episodes.html">Episodes</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Episode Detail Section -->
+    <section class="section">
+        <div class="container">
+            <!-- Back Button -->
+            <a href="episodes.html" class="back-link">← Назад кон Епизоди</a>
+
+            <!-- 
+                🔧 AUTO-POPULATED: This will be filled by app.js 
+                Reads query param: ?id=s2e12
+                Data comes from: matching episode in data/season*.json
+            -->
+            <div id="episode-detail" class="episode-detail-container">
+                <!-- JavaScript will render here -->
+                <div class="loading">Се вчитува...</div>
+            </div>
+
+            <!-- Error Message (shown if episode not found) -->
+            <div id="episode-error" class="error-message" style="display: none;">
+                <h2>Епизодата не е пронајдена</h2>
+                <p>Извинете, бараната епизода не постои или е отстранета.</p>
+                <a href="episodes.html" class="btn">Види ги сите епизоди</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2026 Мој Подкаст. Сите права задржани.</p>
+                <div class="social-links">
+                    <a href="#" target="_blank">YouTube</a>
+                    <a href="#" target="_blank">Spotify</a>
+                    <a href="#" target="_blank">Instagram</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load JavaScript -->
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
