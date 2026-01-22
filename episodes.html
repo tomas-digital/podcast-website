@@ -1,87 +1,47 @@
-<!DOCTYPE html>
-<html lang="mk">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сите Епизоди - Мој Подкаст</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All Episodes</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
-    <!-- Header Navigation -->
-    <header class="site-header">
-        <div class="container">
-            <nav class="nav">
-                <a href="index.html" class="logo">🎙️ Мој Подкаст</a>
-                <ul class="nav-menu">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="episodes.html" class="active">Episodes</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="dot"></span>
+        <span><!-- EDIT: Podcast name -->Podcast Website</span>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="episodes.html">Episodes</a>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Episodes Page Content -->
-    <section class="section">
-        <div class="container">
-            <h1 class="page-title">Сите Епизоди</h1>
+  <main class="container">
+    <h1 class="section-title" style="margin-top:0">All Episodes</h1>
 
-            <!-- Search and Filters -->
-            <div class="episodes-controls">
-                <!-- 
-                    🔧 SEARCH: Client-side filter (works on title + description)
-                -->
-                <div class="search-box">
-                    <input 
-                        type="text" 
-                        id="search-input" 
-                        placeholder="Пребарај епизода..." 
-                        class="search-input"
-                    >
-                </div>
+    <div class="toolbar">
+      <input id="search" class="search" type="search" placeholder="Search episodes..." />
+      <div class="filters">
+        <button class="chip active" data-season="all">All</button>
+        <button class="chip" data-season="1">Season 1</button>
+        <button class="chip" data-season="2">Season 2</button>
+      </div>
+    </div>
 
-                <!-- 
-                    🔧 FILTERS: Season tabs (All / Season 1 / Season 2)
-                -->
-                <div class="filter-tabs">
-                    <button class="filter-tab active" data-season="all">Сите</button>
-                    <button class="filter-tab" data-season="1">Сезона 1</button>
-                    <button class="filter-tab" data-season="2">Сезона 2</button>
-                </div>
-            </div>
+    <div id="episodes-list"><p class="small">Loading...</p></div>
+  </main>
 
-            <!-- Episodes List Container -->
-            <!-- 
-                🔧 AUTO-POPULATED: This will be filled by app.js 
-                Data comes from: all episodes from data/season*.json
-            -->
-            <div id="episodes-list" class="episodes-grid">
-                <!-- JavaScript will render here -->
-                <div class="loading">Се вчитува...</div>
-            </div>
+  <footer class="footer">
+    <div class="small">Tip: seasons are stored as separate JSON files for easy scaling.</div>
+  </footer>
 
-            <!-- No Results Message (hidden by default) -->
-            <div id="no-results" class="no-results" style="display: none;">
-                <p>Нема пронајдено епизоди. Обидете се со друг термин за пребарување.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <p>&copy; 2026 Мој Подкаст. Сите права задржани.</p>
-                <div class="social-links">
-                    <a href="#" target="_blank">YouTube</a>
-                    <a href="#" target="_blank">Spotify</a>
-                    <a href="#" target="_blank">Instagram</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Load JavaScript -->
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/app.js"></script>
+  <script type="module">
+    import { renderEpisodesPage } from "./assets/js/app.js";
+    renderEpisodesPage();
+  </script>
 </body>
 </html>
