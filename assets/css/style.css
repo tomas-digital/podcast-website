@@ -538,6 +538,57 @@ button{ font-family:inherit; }
     #090B0E 100%
   );
 }
+/* ===== Episodes toolbar ===== */
+.toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.search{
+  flex: 1 1 280px;
+  min-width: 220px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  outline: none;
+}
+
+.search::placeholder{ color: rgba(255,255,255,.45); }
+
+.filters{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip{
+  appearance:none;
+  cursor:pointer;
+  border-radius: 999px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.chip:hover{
+  border-color: rgba(245,200,76,.45);
+  background: rgba(245,200,76,.10);
+}
+
+.chip.active{
+  border-color: rgba(245,200,76,.55);
+  background: rgba(245,200,76,.16);
+}
+
 
 
 /* =========================================================
