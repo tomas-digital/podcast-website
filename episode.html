@@ -1,35 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="mk">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Episode</title>
+  <title>Епизода · Про✔еритас</title>
+  <meta name="description" content="Детали за епизода: видео, опис и show notes." />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
+
 <body>
   <header class="header">
     <div class="header-inner">
-      <div class="brand">
-        <span class="dot"></span>
-        <span><!-- EDIT: Podcast name -->Podcast Website</span>
-      </div>
-      <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="episodes.html">Episodes</a>
+      <nav class="nav-left">
+        <a href="index.html">Почетна</a>
+        <a class="active" href="episodes.html">Сите епизоди</a>
+        <a href="about.html">За нас</a>
+        <a href="contact.html">Контакт</a>
       </nav>
+
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>ПРО</span></div>
+        <div class="brand-name">
+          <span>ПРО</span><span class="tick">✔</span><span>ЕРИТАС</span>
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <div id="episode-detail"><p class="small">Loading episode...</p></div>
+    <section class="section" style="padding-top:34px;">
+      <!-- JS fills this -->
+      <div id="episode-detail">
+        <p class="small">Loading episode...</p>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
-    <div class="small">Episode page · RSS-ready data model</div>
+    <div class="footer-inner">
+      <div>
+        <div class="brand" style="margin-bottom:10px;">
+          <div class="brand-mark" aria-hidden="true"><span>ПРО</span></div>
+          <div class="brand-name">
+            <span>ПРО</span><span class="tick">✔</span><span>ЕРИТАС</span>
+          </div>
+        </div>
+        <p>
+          Македонски подкаст кој ги анализира важните случувања, разоткрива лажни вести и
+          поттикнува критичко размислување.
+        </p>
+      </div>
+
+      <div>
+        <h4>Навигација</h4>
+        <p><a href="index.html">Почетна</a></p>
+        <p><a href="episodes.html">Сите епизоди</a></p>
+        <p><a href="about.html">За нас</a></p>
+        <p><a href="contact.html">Контакт</a></p>
+      </div>
+
+      <div>
+        <h4>Контакт</h4>
+        <p>✉️ contact@proveritas.mk</p>
+        <p>📍 Скопје, Северна Македонија</p>
+      </div>
+
+      <div>
+        <h4>Следете нè</h4>
+        <p><a href="#" target="_blank" rel="noopener">YouTube</a></p>
+        <p><a href="#" target="_blank" rel="noopener">Facebook</a></p>
+        <p><a href="#" target="_blank" rel="noopener">Instagram</a></p>
+        <p><a href="#" target="_blank" rel="noopener">TikTok</a></p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © <span id="year"></span> Proveritas. Сите права се задржани.
+    </div>
   </footer>
 
   <script type="module">
     import { renderEpisodeDetail } from "./assets/js/app.js";
+    document.getElementById("year").textContent = new Date().getFullYear();
     renderEpisodeDetail();
   </script>
 </body>
