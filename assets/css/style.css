@@ -666,6 +666,20 @@ footer{
   z-index: 1;
 }
 
+@keyframes floatSlow{
+  0%{ transform: translateY(0); }
+  50%{ transform: translateY(-30px); }
+  100%{ transform: translateY(0); }
+}
+
+.bg-bubbles::before{
+  animation: floatSlow 40s ease-in-out infinite;
+}
+
+.bg-bubbles::after{
+  animation: floatSlow 55s ease-in-out infinite;
+}
+
 
 /* =========================================================
    Responsive
