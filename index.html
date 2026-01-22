@@ -1,43 +1,160 @@
 <!doctype html>
-<html lang="en">
+<html lang="mk">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Podcast Website</title>
+  <title>ПРО✔ЕРИТАС</title>
+  <meta name="description" content="Македонски подкаст што ги анализира важните случувања и разоткрива лажни вести." />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
+
 <body>
+  <!-- Header (like your previous site) -->
   <header class="header">
     <div class="header-inner">
-      <div class="brand">
-        <span class="dot"></span>
-        <span><!-- EDIT: Podcast name -->Podcast Website</span>
-      </div>
-      <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="episodes.html">Episodes</a>
+      <nav class="nav-left">
+        <a class="active" href="index.html">Почетна</a>
+        <a href="episodes.html">Сите епизоди</a>
+        <!-- Create these pages later, or change href to # for now -->
+        <a href="about.html">За нас</a>
+        <a href="contact.html">Контакт</a>
       </nav>
+
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>ПРО</span></div>
+        <div class="brand-name">
+          <span>ПРО</span><span class="tick">✔</span><span>ЕРИТАС</span>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1><!-- EDIT: Tagline -->Your podcast HQ</h1>
-      <p><!-- EDIT: Description -->Latest episodes, organized by season. RSS-ready architecture.</p>
-    </section>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>Вистината<br>секогаш<br>победува</h1>
+          <p>
+            Македонски подкаст што ги анализира важните случувања,
+            разоткрива лажни вести и поттикнува критичко размислување.
+          </p>
 
-    <h2 class="section-title">Latest Episode</h2>
-    <div id="latest-episode"><p class="small">Loading...</p></div>
+          <div class="hero-actions">
+            <!-- EDIT these to your real destinations -->
+            <a class="btn primary" href="episodes.html">Гледај најново</a>
+            <a class="btn ghost" href="#" target="_blank" rel="noopener">YouTube канал</a>
+          </div>
+        </div>
 
-    <h2 class="section-title">Latest 6 Episodes</h2>
-    <div id="latest-episodes"><p class="small">Loading...</p></div>
-  </main>
+        <div class="hero-bubbles">
+          <div class="bubble b1"></div>
+          <div class="bubble b2"></div>
+          <div class="bubble b3"></div>
+          <div class="hint">ПРО✔ЕРИТАС · Dark/Gold brand theme</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- Latest Episode (JS fills #latest-episode) -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Најнова епизода</h2>
+      <p class="section-subtitle">Погледнете ја најновата дискусија од Про✔еритас.</p>
+
+      <div class="latest-wrap">
+        <div id="latest-episode">
+          <p class="small" style="padding:16px;">Loading latest episode...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Episodes (JS fills #latest-episodes) -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Последни епизоди</h2>
+      <p class="section-subtitle">Погледнете ги најновите анализи и дискусии.</p>
+
+      <div id="latest-episodes">
+        <p class="small">Loading episodes...</p>
+      </div>
+
+      <div style="margin-top:16px;">
+        <a class="btn ghost" href="episodes.html">Погледни ги сите епизоди →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shorts placeholder (for later) -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Кратки содржини</h2>
+      <p class="section-subtitle">Брзи анализи и проверени факти во кратки формати.</p>
+
+      <div class="shorts-wrap">
+        <div class="shorts-row" aria-label="Shorts carousel placeholder">
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+        </div>
+        <div class="shorts-note">
+          (Подоцна) Ова ќе се полни од Shorts playlist (исто како епизодите) без да се руши дизајнот.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer (like previous layout) -->
   <footer class="footer">
-    <div>© <span id="year"></span> <!-- EDIT: Podcast name -->Podcast Website</div>
-    <div class="small">Data hooks ready for RSS → JSON automation.</div>
+    <div class="footer-inner">
+      <div>
+        <div class="brand" style="margin-bottom:10px;">
+          <div class="brand-mark" aria-hidden="true"><span>ПРО</span></div>
+          <div class="brand-name">
+            <span>ПРО</span><span class="tick">✔</span><span>ЕРИТАС</span>
+          </div>
+        </div>
+        <p>
+          Македонски подкаст кој ги анализира важните случувања, разоткрива лажни вести и
+          поттикнува критичко размислување.
+        </p>
+      </div>
+
+      <div>
+        <h4>Навигација</h4>
+        <p><a href="index.html">Почетна</a></p>
+        <p><a href="episodes.html">Сите епизоди</a></p>
+        <p><a href="about.html">За нас</a></p>
+        <p><a href="contact.html">Контакт</a></p>
+      </div>
+
+      <div>
+        <h4>Контакт</h4>
+        <p>✉️ contact@proveritas.mk</p>
+        <p>📍 Скопје, Северна Македонија</p>
+      </div>
+
+      <div>
+        <h4>Следете нè</h4>
+        <!-- EDIT: add your real links -->
+        <p><a href="#" target="_blank" rel="noopener">YouTube</a></p>
+        <p><a href="#" target="_blank" rel="noopener">Facebook</a></p>
+        <p><a href="#" target="_blank" rel="noopener">Instagram</a></p>
+        <p><a href="#" target="_blank" rel="noopener">TikTok</a></p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © <span id="year"></span> Proveritas. Сите права се задржани.
+    </div>
   </footer>
 
+  <!-- Keep your existing JS behavior -->
   <script type="module">
     import { renderHome } from "./assets/js/app.js";
     document.getElementById("year").textContent = new Date().getFullYear();
