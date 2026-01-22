@@ -1,319 +1,208 @@
-/* 
-================================================================================
-APP LAYER - Rendering & Interaction Logic
-================================================================================
-This file handles all UI rendering and user interactions.
-It uses the data.js layer to fetch episode data.
-================================================================================
-*/
+import { loadAllEpisodes, loadSeason, esc } from "./data.js";
 
-// Determine which page we're on based on current URL
-const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+function qs(sel) { return document.querySelector(sel); }
+function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
-// Initialize the appropriate page when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  if (currentPage === 'index.html' || currentPage === '') {
-    initHomePage();
-  } else if (currentPage === 'episodes.html') {
-    initEpisodesPage();
-  } else if (currentPage === 'episode.html') {
-    initEpisodeDetailPage();
-  }
-});
+function episodeCard(ep) {
+  const season = ep.season ? `Season ${ep.season}` : "Season";
+  const epNum = (ep.episode ?? ep.episode === 0) ? `EP ${ep.episode}` : "EP";
+  const title = esc(ep.title || "Untitled episode");
+  const date = esc(ep.date || "");
+  const thumb = ep.thumbnail || "https://via.placeholder.com/640x360?text=Episode";
+  const hasYT = !!ep.youtube;
+  const hasSP = !!ep.spotify;
 
-/* 
-================================================================================
-HOME PAGE - Latest Episode + Latest 6 Episodes
-================================================================================
-*/
-async function initHomePage() {
-  const episodes = await loadAllEpisodes();
-  
-  if (episodes.length === 0) {
-    renderEmptyState();
-    return;
-  }
-  
-  // Render latest episode (first in sorted array)
-  renderLatestEpisode(episodes[0]);
-  
-  // Render latest 6 episodes
-  renderLatestSixEpisodes(episodes.slice(0, 6));
-}
-
-/**
- * Render the featured latest episode
- */
-function renderLatestEpisode(episode) {
-  const container = document.getElementById('latest-episode');
-  if (!container) return;
-  
-  const thumbnail = episode.thumbnail || `https://img.youtube.com/vi/${getYouTubeId(episode.youtube)}/hqdefault.jpg`;
-  
-  container.innerHTML = `
-    <img src="${thumbnail}" alt="${episode.title}" class="latest-episode-thumbnail" 
-         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22450%22%3E%3Crect width=%22800%22 height=%22450%22 fill=%22%232a2a2a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2224%22 fill=%22%236b6b6b%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Thumbnail%3C/text%3E%3C/svg%3E'">
-    <div class="latest-episode-content">
-      <div class="episode-card-header">
-        <span class="season-badge">Сезона ${episode.season} • EP ${episode.episode}</span>
-        <span class="episode-date">${formatDate(episode.date)}</span>
-      </div>
-      <h3 class="latest-episode-title">${episode.title}</h3>
-      <p class="latest-episode-description">${episode.description || 'Нема опис.'}</p>
-      <a href="episode.html?id=${episode.id}" class="btn">Слушај сега →</a>
-    </div>
-  `;
-}
-
-/**
- * Render latest 6 episodes grid
- */
-function renderLatestSixEpisodes(episodes) {
-  const container = document.getElementById('latest-episodes');
-  if (!container) return;
-  
-  if (episodes.length === 0) {
-    container.innerHTML = '<p class="loading">Нема достапни епизоди.</p>';
-    return;
-  }
-  
-  container.innerHTML = episodes.map(ep => createEpisodeCard(ep)).join('');
-}
-
-/**
- * Render empty state when no episodes exist
- */
-function renderEmptyState() {
-  const latestContainer = document.getElementById('latest-episode');
-  const gridContainer = document.getElementById('latest-episodes');
-  
-  const emptyMessage = `
-    <div class="no-results">
-      <p>Сè уште нема објавени епизоди. Следете не за ажурирања!</p>
-    </div>
-  `;
-  
-  if (latestContainer) latestContainer.innerHTML = emptyMessage;
-  if (gridContainer) gridContainer.innerHTML = '';
-}
-
-/* 
-================================================================================
-EPISODES PAGE - List with Search & Filters
-================================================================================
-*/
-let allEpisodesData = [];
-let currentFilter = 'all';
-let currentSearchQuery = '';
-
-async function initEpisodesPage() {
-  // Load all episodes
-  allEpisodesData = await loadAllEpisodes();
-  
-  // Initial render
-  renderEpisodesList(allEpisodesData);
-  
-  // Setup search functionality
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', handleSearch);
-  }
-  
-  // Setup filter tabs
-  const filterTabs = document.querySelectorAll('.filter-tab');
-  filterTabs.forEach(tab => {
-    tab.addEventListener('click', handleFilterClick);
-  });
-}
-
-/**
- * Handle search input
- */
-function handleSearch(e) {
-  currentSearchQuery = e.target.value;
-  applyFiltersAndSearch();
-}
-
-/**
- * Handle filter tab click
- */
-function handleFilterClick(e) {
-  const season = e.target.dataset.season;
-  currentFilter = season;
-  
-  // Update active tab
-  document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  e.target.classList.add('active');
-  
-  applyFiltersAndSearch();
-}
-
-/**
- * Apply both filters and search
- */
-function applyFiltersAndSearch() {
-  let filtered = allEpisodesData;
-  
-  // Apply season filter
-  filtered = filterBySeason(filtered, currentFilter);
-  
-  // Apply search
-  filtered = searchEpisodes(filtered, currentSearchQuery);
-  
-  // Render results
-  renderEpisodesList(filtered);
-}
-
-/**
- * Render episodes list
- */
-function renderEpisodesList(episodes) {
-  const container = document.getElementById('episodes-list');
-  const noResults = document.getElementById('no-results');
-  
-  if (!container) return;
-  
-  if (episodes.length === 0) {
-    container.innerHTML = '';
-    if (noResults) noResults.style.display = 'block';
-    return;
-  }
-  
-  if (noResults) noResults.style.display = 'none';
-  container.innerHTML = episodes.map(ep => createEpisodeCard(ep)).join('');
-}
-
-/* 
-================================================================================
-EPISODE DETAIL PAGE - Single Episode View
-================================================================================
-*/
-async function initEpisodeDetailPage() {
-  // Get episode ID from URL query parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const episodeId = urlParams.get('id');
-  
-  if (!episodeId) {
-    showEpisodeError();
-    return;
-  }
-  
-  // Load episode data
-  const episode = await getEpisodeById(episodeId);
-  
-  if (!episode) {
-    showEpisodeError();
-    return;
-  }
-  
-  // Render episode detail
-  renderEpisodeDetail(episode);
-}
-
-/**
- * Render full episode detail page
- */
-function renderEpisodeDetail(episode) {
-  const container = document.getElementById('episode-detail');
-  if (!container) return;
-  
-  // Update page title
-  document.title = `${episode.title} - Мој Подкаст`;
-  
-  // Build embed sections
-  let embedsHTML = '';
-  
-  // YouTube embed
-  if (episode.youtube) {
-    const youtubeId = getYouTubeId(episode.youtube);
-    if (youtubeId) {
-      embedsHTML += `
-        <div class="embed-container">
-          <iframe 
-            src="https://www.youtube.com/embed/${youtubeId}" 
-            allowfullscreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          ></iframe>
-        </div>
-      `;
-    }
-  }
-  
-  // Spotify embed
-  if (episode.spotify) {
-    const spotifyId = getSpotifyId(episode.spotify);
-    if (spotifyId) {
-      embedsHTML += `
-        <div class="embed-container">
-          <iframe 
-            src="https://open.spotify.com/embed/episode/${spotifyId}" 
-            allowfullscreen
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          ></iframe>
-        </div>
-      `;
-    }
-  }
-  
-  container.innerHTML = `
-    <div class="episode-detail-header">
-      <div class="episode-detail-meta">
-        <span class="season-badge">Сезона ${episode.season} • EP ${episode.episode}</span>
-        <span class="episode-date">${formatDate(episode.date)}</span>
-      </div>
-      <h1 class="episode-detail-title">${episode.title}</h1>
-    </div>
-    
-    ${embedsHTML}
-    
-    <div class="episode-detail-description">
-      <h3>За епизодата</h3>
-      <p>${episode.description || 'Нема опис за оваа епизода.'}</p>
-    </div>
-  `;
-}
-
-/**
- * Show error when episode is not found
- */
-function showEpisodeError() {
-  const container = document.getElementById('episode-detail');
-  const errorDiv = document.getElementById('episode-error');
-  
-  if (container) container.style.display = 'none';
-  if (errorDiv) errorDiv.style.display = 'block';
-}
-
-/* 
-================================================================================
-REUSABLE COMPONENTS
-================================================================================
-*/
-
-/**
- * Create episode card HTML (used in grids)
- */
-function createEpisodeCard(episode) {
-  const thumbnail = episode.thumbnail || `https://img.youtube.com/vi/${getYouTubeId(episode.youtube)}/hqdefault.jpg`;
-  
   return `
-    <a href="episode.html?id=${episode.id}" class="episode-card">
-      <img 
-        src="${thumbnail}" 
-        alt="${episode.title}" 
-        class="episode-card-thumbnail"
-        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22450%22%3E%3Crect width=%22800%22 height=%22450%22 fill=%22%232a2a2a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2224%22 fill=%22%236b6b6b%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Thumbnail%3C/text%3E%3C/svg%3E'"
-      >
-      <div class="episode-card-content">
-        <div class="episode-card-header">
-          <span class="season-badge">S${episode.season}E${episode.episode}</span>
-          <span class="episode-date">${formatDate(episode.date)}</span>
+    <article class="card">
+      <img class="thumb" src="${thumb}" alt="${title}">
+      <div class="card-body">
+        <h3 class="card-title">${title}</h3>
+        <div class="meta">
+          <span class="badge">${season}</span>
+          <span class="badge">${epNum}</span>
+          ${date ? `<span class="badge">${date}</span>` : ""}
         </div>
-        <h3 class="episode-card-title">${episode.title}</h3>
-        <p class="episode-card-description">${episode.description || 'Нема опис.'}</p>
+        <div class="actions">
+          <a class="btn primary" href="episode.html?id=${encodeURIComponent(ep.id)}">Open</a>
+          ${hasYT ? `<a class="btn green" href="${esc(ep.youtube)}" target="_blank" rel="noopener">Watch</a>` : ""}
+          ${hasSP ? `<a class="btn" href="${esc(ep.spotify)}" target="_blank" rel="noopener">Listen</a>` : ""}
+        </div>
       </div>
-    </a>
+    </article>
   `;
+}
+
+export async function renderHome() {
+  const latestEl = qs("#latest-episode");
+  const listEl = qs("#latest-episodes");
+  if (!latestEl || !listEl) return;
+
+  const all = await loadAllEpisodes();
+  const latest = all[0];
+
+  if (!latest) {
+    latestEl.innerHTML = `<p class="small">No episodes yet. (RSS/JSON will populate this later)</p>`;
+    listEl.innerHTML = "";
+    return;
+  }
+
+  latestEl.innerHTML = `
+    <div class="card">
+      ${latest.youtube ? `
+        <div class="embed">
+          <iframe
+            src="https://www.youtube.com/embed/${extractYouTubeId(latest.youtube)}"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+      ` : `
+        <div class="card-body">
+          <p class="small">Video not available for this episode yet.</p>
+        </div>
+      `}
+      <div class="card-body">
+        <h3 class="card-title">${esc(latest.title)}</h3>
+        <div class="meta">
+          <span class="badge">Season ${latest.season ?? "-"}</span>
+          <span class="badge">${latest.episode != null ? `EP ${latest.episode}` : "EP -"}</span>
+          ${latest.date ? `<span class="badge">${esc(latest.date)}</span>` : ""}
+        </div>
+        <div class="actions">
+          <a class="btn primary" href="episode.html?id=${encodeURIComponent(latest.id)}">Open episode page</a>
+          ${latest.spotify ? `<a class="btn" href="${esc(latest.spotify)}" target="_blank" rel="noopener">Listen on Spotify</a>` : ""}
+          ${latest.youtube ? `<a class="btn green" href="${esc(latest.youtube)}" target="_blank" rel="noopener">Watch on YouTube</a>` : ""}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const last6 = all.slice(0, 6);
+  listEl.innerHTML = `<div class="grid">${last6.map(episodeCard).join("")}</div>`;
+}
+
+export async function renderEpisodesPage() {
+  const listEl = qs("#episodes-list");
+  const searchEl = qs("#search");
+  if (!listEl) return;
+
+  let activeSeason = "all";
+  let all = await loadAllEpisodes();
+  let filtered = all;
+
+  function apply() {
+    const q = (searchEl?.value || "").toLowerCase().trim();
+
+    // season filter
+    if (activeSeason === "1") filtered = all.filter(e => Number(e.season) === 1);
+    else if (activeSeason === "2") filtered = all.filter(e => Number(e.season) === 2);
+    else filtered = all;
+
+    // search filter
+    if (q) {
+      filtered = filtered.filter(e =>
+        String(e.title || "").toLowerCase().includes(q) ||
+        String(e.description || "").toLowerCase().includes(q)
+      );
+    }
+
+    listEl.innerHTML = filtered.length
+      ? `<div class="grid">${filtered.map(episodeCard).join("")}</div>`
+      : `<p class="small">No results.</p>`;
+  }
+
+  qsa("[data-season]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      qsa("[data-season]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeSeason = btn.dataset.season;
+      apply();
+    });
+  });
+
+  if (searchEl) searchEl.addEventListener("input", apply);
+  apply();
+}
+
+export async function renderEpisodeDetail() {
+  const detailEl = qs("#episode-detail");
+  if (!detailEl) return;
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  if (!id) {
+    detailEl.innerHTML = `<p class="small">Missing episode id.</p>`;
+    return;
+  }
+
+  const all = await loadAllEpisodes();
+  const ep = all.find(e => String(e.id) === String(id));
+
+  if (!ep) {
+    detailEl.innerHTML = `<p class="small">Episode not found.</p>`;
+    return;
+  }
+
+  detailEl.innerHTML = `
+    <div class="hero">
+      <h1>${esc(ep.title)}</h1>
+      <p class="small">Season ${ep.season ?? "-"} · ${ep.episode != null ? `EP ${ep.episode}` : "EP -"} ${ep.date ? `· ${esc(ep.date)}` : ""}</p>
+    </div>
+
+    <div style="height:16px"></div>
+
+    ${ep.youtube ? `
+      <div class="embed">
+        <iframe
+          src="https://www.youtube.com/embed/${extractYouTubeId(ep.youtube)}"
+          title="YouTube video player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+      <div style="height:16px"></div>
+    ` : ""}
+
+    ${ep.spotify ? `
+      <div class="embed">
+        <iframe
+          src="${spotifyEmbedUrl(ep.spotify)}"
+          title="Spotify player"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"></iframe>
+      </div>
+      <div style="height:16px"></div>
+    ` : ""}
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="section-title" style="margin-top:0">Show notes</h2>
+        <p class="small">${esc(ep.description || "No description yet.")}</p>
+
+        <div class="actions">
+          ${ep.youtube ? `<a class="btn green" href="${esc(ep.youtube)}" target="_blank" rel="noopener">Watch on YouTube</a>` : ""}
+          ${ep.spotify ? `<a class="btn" href="${esc(ep.spotify)}" target="_blank" rel="noopener">Listen on Spotify</a>` : ""}
+          <a class="btn primary" href="episodes.html">Back to Episodes</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function extractYouTubeId(url) {
+  // supports watch?v=, youtu.be/, /embed/
+  const u = String(url);
+  let m = u.match(/v=([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  m = u.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  m = u.match(/embed\/([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  return "";
+}
+
+function spotifyEmbedUrl(url) {
+  // Accept episode or show links and convert to embed
+  const u = String(url);
+  if (u.includes("/embed/")) return u;
+  return u.replace("open.spotify.com/", "open.spotify.com/embed/");
 }
