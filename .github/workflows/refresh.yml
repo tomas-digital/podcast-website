@@ -1,0 +1,149 @@
+name: Refresh seasons from YouTube Playlist RSS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch RSS and build season JSON files
+        env:
+          S1_PLAYLIST_ID: "PLQ2KC6ajwSZxu-ykkeWbVbukNYoqxYP-p"
+          S2_PLAYLIST_ID: "PLQ2KC6ajwSZxroOjeFNrzngm201Dzy9R9"
+        run: |
+          node - <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+
+          async function fetchText(url) {
+            const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+            if (!res.ok) throw new Error(`Fetch failed ${res.status} for ${url}`);
+            return await res.text();
+          }
+
+          function decodeXml(s) {
+            return String(s || "")
+              .replaceAll("&amp;", "&")
+              .replaceAll("&lt;", "<")
+              .replaceAll("&gt;", ">")
+              .replaceAll("&quot;", '"')
+              .replaceAll("&#39;", "'");
+          }
+
+          function tag(xml, name) {
+            const m = xml.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`));
+            return m ? m[1].trim() : "";
+          }
+
+          function attr(xml, name) {
+            const m = xml.match(new RegExp(`${name}="([^"]+)"`));
+            return m ? m[1] : "";
+          }
+
+          function parseEntries(feedXml) {
+            return feedXml
+              .split("<entry>")
+              .slice(1)
+              .map(x => x.split("</entry>")[0]);
+          }
+
+          function extractEpNumber(title) {
+            // Supports: "EP 12", "Ep12", "Episode 12", "E12" (optional)
+            const t = title || "";
+            let m = t.match(/\bEP\s*([0-9]{1,3})\b/i);
+            if (m) return Number(m[1]);
+            m = t.match(/\bEpisode\s*([0-9]{1,3})\b/i);
+            if (m) return Number(m[1]);
+            m = t.match(/\bE\s*([0-9]{1,3})\b/i);
+            if (m) return Number(m[1]);
+            return null;
+          }
+
+          function buildSeasonJson(feedXml, seasonNumber) {
+            const entries = parseEntries(feedXml);
+
+            const items = entries.map(entry => {
+              const title = decodeXml(tag(entry, "title"));
+              const published = tag(entry, "published"); // ISO timestamp
+              const date = published ? published.slice(0, 10) : null;
+
+              const videoId = tag(entry, "yt:videoId");
+              const linkHref = attr(entry.match(/<link[^>]+>/)?.[0] || "", "href");
+              const youtube = linkHref || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : "");
+
+              const description = decodeXml(tag(entry, "media:description"));
+              const thumbUrl = attr(entry.match(/<media:thumbnail[^>]+>/)?.[0] || "", "url")
+                || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "");
+
+              const ep = extractEpNumber(title);
+              const id = ep != null ? `s${seasonNumber}e${ep}` : `s${seasonNumber}-${videoId || Math.random().toString(36).slice(2)}`;
+
+              return {
+                id,
+                season: seasonNumber,
+                episode: ep,         // can be null if not detected
+                title,
+                date,
+                youtube,
+                thumbnail: thumbUrl,
+                description
+                // spotify field can be added later manually or via another automation
+              };
+            });
+
+            // Newest first (published descending)
+            items.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+            return items;
+          }
+
+          async function main() {
+            const s1 = process.env.S1_PLAYLIST_ID;
+            const s2 = process.env.S2_PLAYLIST_ID;
+
+            const rss1 = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(s1)}`;
+            const rss2 = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(s2)}`;
+
+            const [xml1, xml2] = await Promise.all([fetchText(rss1), fetchText(rss2)]);
+
+            const season1 = buildSeasonJson(xml1, 1);
+            const season2 = buildSeasonJson(xml2, 2);
+
+            fs.mkdirSync("data", { recursive: true });
+            fs.writeFileSync(path.join("data", "season1.json"), JSON.stringify(season1, null, 2));
+            fs.writeFileSync(path.join("data", "season2.json"), JSON.stringify(season2, null, 2));
+
+            console.log(`season1.json: ${season1.length} items`);
+            console.log(`season2.json: ${season2.length} items`);
+          }
+
+          main().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Commit changes if any
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/season1.json data/season2.json
+          git commit -m "Auto-update season JSON from YouTube RSS"
+          git push
