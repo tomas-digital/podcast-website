@@ -612,6 +612,52 @@ button{ font-family:inherit; }
   padding: 10px 14px;
 }
 
+/* =========================
+   Global background bubbles
+   ========================= */
+.bg-bubbles{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Base bubble */
+.bg-bubbles::before,
+.bg-bubbles::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  background: rgba(245,200,76,.18);
+  filter: blur(8px);
+}
+
+/* Big bubble */
+.bg-bubbles::before{
+  width: 420px;
+  height: 420px;
+  top: 8%;
+  left: 12%;
+  opacity: .22;
+}
+
+/* Medium bubble */
+.bg-bubbles::after{
+  width: 260px;
+  height: 260px;
+  top: 28%;
+  right: 14%;
+  opacity: .18;
+}
+
+/* Extra bubbles using box-shadow trick */
+.bg-bubbles{
+  box-shadow:
+    720px 120px 0 180px rgba(245,200,76,.08),
+    -420px 480px 0 120px rgba(245,200,76,.10),
+    260px 720px 0 160px rgba(245,200,76,.06);
+}
 
 
 /* =========================================================
