@@ -490,9 +490,11 @@ button{ font-family:inherit; }
    SOCIAL ICONS
    ========================= */
 .social-links{
-  display:flex;
-  gap:12px;
-  margin-top: 10px;
+   background: transparent !important;
+  border: none !important;
+  width: auto;
+  height: auto;
+  padding: 0;
 }
 
 .social-links a{
