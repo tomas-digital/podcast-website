@@ -1,96 +1,47 @@
-<!DOCTYPE html>
-<html lang="mk">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 
-        ✏️ EDIT: Change your podcast name and description here 
-    -->
-    <title>Мој Подкаст - Home</title>
-    <meta name="description" content="Најдобриот подкаст за технологија и иновации">
-    
-    <link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Podcast Website</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
-    <!-- Header Navigation -->
-    <header class="site-header">
-        <div class="container">
-            <nav class="nav">
-                <!-- 
-                    ✏️ EDIT: Change podcast name/logo here 
-                -->
-                <a href="index.html" class="logo">🎙️ Мој Подкаст</a>
-                <ul class="nav-menu">
-                    <li><a href="index.html" class="active">Home</a></li>
-                    <li><a href="episodes.html">Episodes</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="dot"></span>
+        <span><!-- EDIT: Podcast name -->Podcast Website</span>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="episodes.html">Episodes</a>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Hero Section -->
+  <main class="container">
     <section class="hero">
-        <div class="container">
-            <!-- 
-                ✏️ EDIT: Change hero text here 
-            -->
-            <h1 class="hero-title">Добредојдовте на Мој Подкаст</h1>
-            <p class="hero-description">
-                Секоја недела донесуваме нови епизоди со најдобрите гости од индустријата
-            </p>
-        </div>
+      <h1><!-- EDIT: Tagline -->Your podcast HQ</h1>
+      <p><!-- EDIT: Description -->Latest episodes, organized by season. RSS-ready architecture.</p>
     </section>
 
-    <!-- Latest Episode Section -->
-    <section class="section">
-        <div class="container">
-            <h2 class="section-title">Последна Епизода</h2>
-            <!-- 
-                🔧 AUTO-POPULATED: This will be filled by app.js 
-                Data comes from: latest episode in data/season*.json
-            -->
-            <div id="latest-episode" class="latest-episode-container">
-                <!-- JavaScript will render here -->
-                <div class="loading">Се вчитува...</div>
-            </div>
-        </div>
-    </section>
+    <h2 class="section-title">Latest Episode</h2>
+    <div id="latest-episode"><p class="small">Loading...</p></div>
 
-    <!-- Latest 6 Episodes Section -->
-    <section class="section">
-        <div class="container">
-            <h2 class="section-title">Скорешни Епизоди</h2>
-            <!-- 
-                🔧 AUTO-POPULATED: This will be filled by app.js 
-                Data comes from: latest 6 episodes sorted by date
-            -->
-            <div id="latest-episodes" class="episodes-grid">
-                <!-- JavaScript will render here -->
-                <div class="loading">Се вчитува...</div>
-            </div>
-        </div>
-    </section>
+    <h2 class="section-title">Latest 6 Episodes</h2>
+    <div id="latest-episodes"><p class="small">Loading...</p></div>
+  </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <!-- 
-                ✏️ EDIT: Add your social links and copyright info 
-            -->
-            <div class="footer-content">
-                <p>&copy; 2026 Мој Подкаст. Сите права задржани.</p>
-                <div class="social-links">
-                    <!-- Add your social media links -->
-                    <a href="#" target="_blank">YouTube</a>
-                    <a href="#" target="_blank">Spotify</a>
-                    <a href="#" target="_blank">Instagram</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+  <footer class="footer">
+    <div>© <span id="year"></span> <!-- EDIT: Podcast name -->Podcast Website</div>
+    <div class="small">Data hooks ready for RSS → JSON automation.</div>
+  </footer>
 
-    <!-- Load JavaScript -->
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/app.js"></script>
+  <script type="module">
+    import { renderHome } from "./assets/js/app.js";
+    document.getElementById("year").textContent = new Date().getFullYear();
+    renderHome();
+  </script>
 </body>
 </html>
