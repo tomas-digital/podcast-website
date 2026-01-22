@@ -452,6 +452,70 @@ button{ font-family:inherit; }
   color: rgba(255,255,255,.45);
   font-size: 13px;
 }
+/* =========================
+   LOGO
+   ========================= */
+.logo{
+  height: 38px;
+  width: auto;
+}
+
+.footer-logo{
+  height: 44px;
+  margin-bottom: 12px;
+}
+
+/* =========================
+   NAV ICONS
+   ========================= */
+.nav-left a{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.nav-icon{
+  font-size: 16px;
+  opacity: .85;
+}
+
+/* Mobile: hide text, show icons */
+@media (max-width: 620px){
+  .nav-text{
+    display:none;
+  }
+}
+
+/* =========================
+   SOCIAL ICONS
+   ========================= */
+.social-links{
+  display:flex;
+  gap:12px;
+  margin-top: 10px;
+}
+
+.social-links a{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display:grid;
+  place-items:center;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.social-links a:hover{
+  transform: translateY(-2px);
+  background: rgba(245,200,76,.15);
+  border-color: rgba(245,200,76,.55);
+}
+
+.social-links img{
+  width: 18px;
+  height: 18px;
+}
 
 /* =========================================================
    Responsive
