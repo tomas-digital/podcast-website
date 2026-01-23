@@ -82,46 +82,208 @@ export async function renderHome() {
 }
 
 export async function renderEpisodesPage() {
-  const listEl = qs("#episodes-list");
-  const searchEl = qs("#search");
+  const listEl = document.getElementById("episodes-list");
+  const pagEl = document.getElementById("pagination");
+  const searchEl = document.getElementById("search");
+  const chips = Array.from(document.querySelectorAll(".chip"));
+
   if (!listEl) return;
 
-  let activeSeason = "all";
-  let all = await loadAllEpisodes();
-  let filtered = all;
+  // State
+  const state = {
+    all: [],
+    filtered: [],
+    season: "all",   // "all" | "1" | "2"
+    q: "",
+    page: 1,
+    perPage: 12
+  };
 
-  function apply() {
-    const q = (searchEl?.value || "").toLowerCase().trim();
+  // Helpers
+  const norm = (s) => (s || "").toString().toLowerCase().trim();
 
-    // season filter
-    if (activeSeason === "1") filtered = all.filter(e => Number(e.season) === 1);
-    else if (activeSeason === "2") filtered = all.filter(e => Number(e.season) === 2);
-    else filtered = all;
+  const applyFilters = () => {
+    let items = [...state.all];
 
-    // search filter
-    if (q) {
-      filtered = filtered.filter(e =>
-        String(e.title || "").toLowerCase().includes(q) ||
-        String(e.description || "").toLowerCase().includes(q)
-      );
+    if (state.season !== "all") {
+      const seasonNum = Number(state.season);
+      items = items.filter(e => Number(e.season) === seasonNum);
     }
 
-    listEl.innerHTML = filtered.length
-      ? `<div class="grid">${filtered.map(episodeCard).join("")}</div>`
-      : `<p class="small">No results.</p>`;
+    if (state.q) {
+      const q = norm(state.q);
+      items = items.filter(e => {
+        const hay = [
+          e.title,
+          e.description,
+          `s${e.season}e${e.episode}`,
+          e.date
+        ].map(norm).join(" ");
+        return hay.includes(q);
+      });
+    }
+
+    state.filtered = items;
+
+    // Clamp page
+    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.perPage));
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+  };
+
+  const youtubeIdFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      // fallback
+      const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+      return m ? m[1] : null;
+    } catch {
+      const m = (url || "").match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+      return m ? m[1] : null;
+    }
+  };
+
+  const renderCards = (items) => {
+    if (!items.length) {
+      listEl.innerHTML = `<p class="small">Нема резултати.</p>`;
+      return;
+    }
+
+    // Grid wrapper like your design
+    listEl.innerHTML = `
+      <div class="grid">
+        ${items.map(ep => {
+          const ytId = youtubeIdFromUrl(ep.youtube);
+          const thumb = ep.thumbnail || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "");
+          const date = ep.date || "";
+          const season = ep.season ?? "";
+          const episode = ep.episode ?? "";
+          const title = ep.title || "Untitled episode";
+
+          return `
+            <article class="card">
+              <a href="episode.html?id=${encodeURIComponent(ep.id)}" style="text-decoration:none;color:inherit;">
+                <div class="thumb" style="background:#0b0d10;">
+                  ${thumb ? `<img src="${thumb}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">` : ""}
+                </div>
+
+                <div class="card-body">
+                  <div class="meta" style="margin-bottom:10px;">
+                    <span class="badge">Season ${season}</span>
+                    <span class="badge">EP ${episode}</span>
+                    ${date ? `<span class="badge">${date}</span>` : ""}
+                  </div>
+
+                  <h3 class="card-title">${title}</h3>
+                  <p class="small">${(ep.description || "").slice(0, 120)}${(ep.description || "").length > 120 ? "…" : ""}</p>
+
+                  <div class="actions" style="margin-top:12px;">
+                    <a class="btn primary" href="episode.html?id=${encodeURIComponent(ep.id)}">Open</a>
+                    ${ep.youtube ? `<a class="btn ghost" href="${ep.youtube}" target="_blank" rel="noopener">Watch</a>` : ""}
+                  </div>
+                </div>
+              </a>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    `;
+  };
+
+  const renderPagination = () => {
+    if (!pagEl) return;
+
+    const total = state.filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / state.perPage));
+    const start = (state.page - 1) * state.perPage + 1;
+    const end = Math.min(total, state.page * state.perPage);
+
+    // Hide pagination if not needed
+    if (totalPages <= 1) {
+      pagEl.innerHTML = total ? `<div class="page-info small">Прикажани ${start}-${end} од ${total}</div>` : "";
+      return;
+    }
+
+    // Build page number buttons (compact)
+    const pages = [];
+    const push = (p) => pages.push(p);
+
+    push(1);
+    if (state.page - 2 > 2) push("…");
+    for (let p = Math.max(2, state.page - 2); p <= Math.min(totalPages - 1, state.page + 2); p++) push(p);
+    if (state.page + 2 < totalPages - 1) push("…");
+    if (totalPages > 1) push(totalPages);
+
+    pagEl.innerHTML = `
+      <div class="pagination">
+        <div class="page-info small">Прикажани ${start}-${end} од ${total}</div>
+
+        <div class="page-actions">
+          <button class="btn ghost" data-page="prev" ${state.page === 1 ? "disabled" : ""}>Prev</button>
+
+          ${pages.map(p => {
+            if (p === "…") return `<span class="small" style="opacity:.6;padding:0 6px;">…</span>`;
+            const active = p === state.page ? "primary" : "ghost";
+            return `<button class="btn ${active}" data-page="${p}">${p}</button>`;
+          }).join("")}
+
+          <button class="btn ghost" data-page="next" ${state.page === totalPages ? "disabled" : ""}>Next</button>
+        </div>
+      </div>
+    `;
+
+    // Wire clicks
+    pagEl.querySelectorAll("[data-page]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const v = btn.getAttribute("data-page");
+        const totalPages2 = Math.max(1, Math.ceil(state.filtered.length / state.perPage));
+
+        if (v === "prev") state.page = Math.max(1, state.page - 1);
+        else if (v === "next") state.page = Math.min(totalPages2, state.page + 1);
+        else state.page = Number(v);
+
+        paint();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+  };
+
+  const paint = () => {
+    applyFilters();
+    const startIdx = (state.page - 1) * state.perPage;
+    const pageItems = state.filtered.slice(startIdx, startIdx + state.perPage);
+    renderCards(pageItems);
+    renderPagination();
+  };
+
+  // Load data
+  listEl.innerHTML = `<p class="small">Loading episodes…</p>`;
+  state.all = await loadAllEpisodes();
+  // Ensure newest first (if dates exist)
+  state.all.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  paint();
+
+  // Events
+  if (searchEl) {
+    searchEl.addEventListener("input", (e) => {
+      state.q = e.target.value || "";
+      state.page = 1;
+      paint();
+    });
   }
 
-  qsa("[data-season]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      qsa("[data-season]").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      activeSeason = btn.dataset.season;
-      apply();
+  chips.forEach(ch => {
+    ch.addEventListener("click", () => {
+      chips.forEach(c => c.classList.remove("active"));
+      ch.classList.add("active");
+      state.season = ch.getAttribute("data-season") || "all";
+      state.page = 1;
+      paint();
     });
   });
-
-  if (searchEl) searchEl.addEventListener("input", apply);
-  apply();
 }
 
 export async function renderEpisodeDetail() {
