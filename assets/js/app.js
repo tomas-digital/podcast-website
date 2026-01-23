@@ -303,18 +303,17 @@ export async function renderEpisodeDetail() {
   `;
 }
 
-let shortsVisible = 6;
+import { loadShorts } from "./data.js";
 
-function renderShorts(shorts){
+let shortsVisible = 6;
+let allShorts = [];
+
+function renderShorts(){
   const row = document.querySelector(".shorts-row");
   const btn = document.getElementById("shorts-more");
   if (!row) return;
 
-  if (!shorts || shorts.length === 0){
-    return;
-  }
-
-  const shown = shorts.slice(0, shortsVisible);
+  const shown = allShorts.slice(0, shortsVisible);
 
   row.innerHTML = shown.map(s => `
     <a class="short-card" href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
@@ -326,19 +325,25 @@ function renderShorts(shorts){
   `).join("");
 
   if (btn){
-    btn.style.display = shortsVisible < shorts.length ? "inline-flex" : "none";
-    btn.onclick = () => {
-      shortsVisible += 6;
-      renderShorts(shorts);
-    };
+    btn.style.display = shortsVisible < allShorts.length ? "inline-flex" : "none";
   }
 }
 
-// inside your existing home init:
-(async () => {
-  const shorts = await loadShorts();
-  renderShorts(shorts);
-})();
+async function initShorts(){
+  allShorts = await loadShorts();
+  renderShorts();
+
+  const btn = document.getElementById("shorts-more");
+  if (btn){
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      shortsVisible += 6;
+      renderShorts();
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initShorts);
 
 
 
