@@ -731,6 +731,11 @@ header, main, footer{
   background: #07080C;   /* solid */
 }
 
+#load-more{
+  padding: 12px 18px;
+}
+
+
 
 
 /* =========================================================
