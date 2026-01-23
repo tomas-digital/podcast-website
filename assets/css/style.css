@@ -31,9 +31,10 @@ html,body{ height:100%; }
 body{
   margin:0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background: #0B0D10; /* base background */
+  background: #0B0D10; /* base only */
   color: var(--text);
 }
+
 
 
 img{ max-width:100%; display:block; }
@@ -530,14 +531,15 @@ button{ font-family:inherit; }
 }
 /* ===== Page vertical gradient (content only) ===== */
 .page-gradient{
-  background: linear-gradient(
-    180deg,
-    #0E1117 0%,
-    #0B0D10 35%,
-    #0B0D10 65%,
+  min-height: 100vh;
+  background: linear-gradient(180deg,
+    #10131A 0%,
+    #0B0D10 40%,
+    #0B0D10 75%,
     #090B0E 100%
   );
 }
+
 /* ===== Episodes toolbar ===== */
 .toolbar{
   display:flex;
@@ -653,11 +655,19 @@ button{ font-family:inherit; }
 
 /* Extra bubbles using box-shadow trick */
 .bg-bubbles{
-  box-shadow:
-    720px 120px 0 180px rgba(245,200,76,.08),
-    -420px 480px 0 120px rgba(245,200,76,.10),
-    260px 720px 0 160px rgba(245,200,76,.06);
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .55;  /* keep subtle */
 }
+
+/* ensure content is above */
+header, main, footer{
+  position: relative;
+  z-index: 1;
+}
+
 
 
 @keyframes floatSlow{
@@ -673,6 +683,16 @@ button{ font-family:inherit; }
 .bg-bubbles::after{
   animation: floatSlow 55s ease-in-out infinite;
 }
+.header{
+  background: #0B0D10;   /* solid */
+  backdrop-filter: none; /* remove blur mixing */
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.footer{
+  background: #07080C;   /* solid */
+}
+
 
 
 /* =========================================================
@@ -683,8 +703,11 @@ button{ font-family:inherit; }
     grid-template-columns: 1fr;
   }
   .hero-bubbles{
-    min-height: 200px;
-  }
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: none;
+}
+
   .grid{
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
