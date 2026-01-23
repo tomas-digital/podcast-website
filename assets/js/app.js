@@ -312,7 +312,7 @@ function renderShorts(shorts){
     return;
   }
 
-  const latest6 = shorts.slice(0, 6);
+  const latest6 = shorts.slice(0, 9);
 
   row.innerHTML = latest6.map(s => `
     <a class="short-card" href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
