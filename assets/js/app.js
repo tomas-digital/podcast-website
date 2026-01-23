@@ -303,18 +303,20 @@ export async function renderEpisodeDetail() {
   `;
 }
 
+let shortsVisible = 6;
+
 function renderShorts(shorts){
   const row = document.querySelector(".shorts-row");
+  const btn = document.getElementById("shorts-more");
   if (!row) return;
 
   if (!shorts || shorts.length === 0){
-    // keep your placeholders
     return;
   }
 
-  const latest6 = shorts.slice(0, 6);
+  const shown = shorts.slice(0, shortsVisible);
 
-  row.innerHTML = latest6.map(s => `
+  row.innerHTML = shown.map(s => `
     <a class="short-card" href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
       <div class="short-thumb">
         <img src="${s.thumbnail}" alt="">
@@ -322,6 +324,14 @@ function renderShorts(shorts){
       <div class="label">${s.title}</div>
     </a>
   `).join("");
+
+  if (btn){
+    btn.style.display = shortsVisible < shorts.length ? "inline-flex" : "none";
+    btn.onclick = () => {
+      shortsVisible += 6;
+      renderShorts(shorts);
+    };
+  }
 }
 
 // inside your existing home init:
@@ -329,6 +339,7 @@ function renderShorts(shorts){
   const shorts = await loadShorts();
   renderShorts(shorts);
 })();
+
 
 
 function extractYouTubeId(url) {
