@@ -735,57 +735,6 @@ header, main, footer{
   padding: 12px 18px;
 }
 
-/* =========================
-   BACKGROUND HARD RESET
-   ========================= */
-
-/* 1) Base page background (solid) */
-html, body{
-  background: #0B0D10 !important;
-}
-
-/* 2) Only the content area gets the vertical gradient */
-.page-gradient{
-  min-height: 100vh;
-  background: linear-gradient(
-    180deg,
-    #10131A 0%,
-    #0B0D10 40%,
-    #0B0D10 75%,
-    #090B0E 100%
-  ) !important;
-}
-
-/* 3) Header + Footer are solid, no blur mixing */
-.header{
-  background: #0B0D10 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-.footer{
-  background: #07080C !important;
-}
-
-/* 4) Kill any old gradient/radial overlays that cause patches */
-.hero, .hero *{
-  background-image: none !important;
-}
-
-/* 5) Make sure bubbles are behind everything */
-.bg-bubbles{
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-header, main, footer{
-  position: relative;
-  z-index: 1;
-}
-
-
 
 
 /* =========================================================
