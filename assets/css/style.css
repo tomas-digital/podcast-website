@@ -787,6 +787,51 @@ header, main, footer{
   border-color: rgba(245,200,76,.55);
   background: rgba(245,200,76,.10);
 }
+/* =========================
+   Hero brand logo (replace bubbles)
+   ========================= */
+
+.hero-brand{
+  border-radius: 18px;
+  padding: 28px;
+  border: 1px solid rgba(245,200,76,.35);
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.03),
+    rgba(255,255,255,.01)
+  );
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 200px;
+}
+
+/* Logo itself */
+.hero-brand-logo{
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+
+  /* premium feel */
+  filter:
+    drop-shadow(0 12px 24px rgba(0,0,0,.55))
+    drop-shadow(0 0 18px rgba(245,200,76,.25));
+}
+
+/* Responsive behavior */
+@media (max-width: 900px){
+  .hero-brand{
+    margin-top: 16px;
+    padding: 22px;
+  }
+}
+.hero-bubbles{ display:none !important; }
 
 
 
