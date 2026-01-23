@@ -6,3 +6,16 @@ Header always set X-Content-Type-Options "nosniff"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
 Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+# --- Content Security Policy (CSP) ---
+Header always set Content-Security-Policy "default-src 'self'; \
+img-src 'self' https: data:; \
+style-src 'self' 'unsafe-inline'; \
+script-src 'self'; \
+frame-src https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com; \
+connect-src 'self'; \
+base-uri 'self'; \
+form-action 'self'; \
+upgrade-insecure-requests"
+
+
