@@ -82,48 +82,163 @@ export async function renderHome() {
 }
 
 export async function renderEpisodesPage() {
-  const listEl = qs("#episodes-list");
-  const searchEl = qs("#search");
+  const listEl = document.getElementById("episodes-list");
+  const searchEl = document.getElementById("search");
+  const chips = Array.from(document.querySelectorAll(".chip"));
+  const loadMoreBtn = document.getElementById("load-more");
+  const loadMoreWrap = document.getElementById("load-more-wrap");
+
   if (!listEl) return;
 
-  let activeSeason = "all";
-  let all = await loadAllEpisodes();
-  let filtered = all;
+  const state = {
+    all: [],
+    filtered: [],
+    season: "all",
+    q: "",
+    showAll: false,
+    initialCount: 9,
+  };
 
-  function apply() {
-    const q = (searchEl?.value || "").toLowerCase().trim();
+  const norm = (s) => (s || "").toString().toLowerCase().trim();
+
+  const youtubeIdFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+      return m ? m[1] : null;
+    } catch {
+      const m = (url || "").match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+      return m ? m[1] : null;
+    }
+  };
+
+  const applyFilters = () => {
+    let items = [...state.all];
 
     // season filter
-    if (activeSeason === "1") filtered = all.filter(e => Number(e.season) === 1);
-    else if (activeSeason === "2") filtered = all.filter(e => Number(e.season) === 2);
-    else filtered = all;
-
-    // search filter
-    if (q) {
-      filtered = filtered.filter(e =>
-        String(e.title || "").toLowerCase().includes(q) ||
-        String(e.description || "").toLowerCase().includes(q)
-      );
+    if (state.season !== "all") {
+      const s = Number(state.season);
+      items = items.filter(e => Number(e.season) === s);
     }
 
-    listEl.innerHTML = filtered.length
-      ? `<div class="grid">${filtered.map(episodeCard).join("")}</div>`
-      : `<p class="small">No results.</p>`;
+    // search filter
+    if (state.q) {
+      const q = norm(state.q);
+      items = items.filter(e => {
+        const hay = [e.title, e.description, e.date, `s${e.season}e${e.episode}`].map(norm).join(" ");
+        return hay.includes(q);
+      });
+    }
+
+    state.filtered = items;
+  };
+
+  const renderCards = (items) => {
+    if (!items.length) {
+      listEl.innerHTML = `<p class="small">Нема резултати.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = `
+      <div class="grid">
+        ${items.map(ep => {
+          const ytId = youtubeIdFromUrl(ep.youtube);
+          const thumb = ep.thumbnail || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "");
+          const date = ep.date || "";
+          const season = ep.season ?? "";
+          const episode = ep.episode ?? "";
+          const title = ep.title || "Untitled episode";
+
+          return `
+            <article class="card">
+              <a href="episode.html?id=${encodeURIComponent(ep.id)}" style="text-decoration:none;color:inherit;">
+                <div class="thumb" style="background:#0b0d10;">
+                  ${thumb ? `<img src="${thumb}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">` : ""}
+                </div>
+
+                <div class="card-body">
+                  <div class="meta" style="margin-bottom:10px;">
+                    <span class="badge">Season ${season}</span>
+                    <span class="badge">EP ${episode}</span>
+                    ${date ? `<span class="badge">${date}</span>` : ""}
+                  </div>
+
+                  <h3 class="card-title">${title}</h3>
+                  <p class="small">${(ep.description || "").slice(0, 120)}${(ep.description || "").length > 120 ? "…" : ""}</p>
+
+                  <div class="actions" style="margin-top:12px;">
+                    <span class="btn primary">Open</span>
+                    ${ep.youtube ? `<span class="btn ghost">Watch</span>` : ""}
+                  </div>
+                </div>
+              </a>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    `;
+  };
+
+  const paint = () => {
+    applyFilters();
+
+    const total = state.filtered.length;
+    const shouldLimit = !state.showAll && !state.q; 
+    // ^ if user is searching, show all matching results (better UX)
+
+    const visible = shouldLimit ? state.filtered.slice(0, state.initialCount) : state.filtered;
+
+    renderCards(visible);
+
+    // Show/hide "See more"
+    if (loadMoreWrap) {
+      const needBtn = shouldLimit && total > state.initialCount;
+      loadMoreWrap.style.display = needBtn ? "flex" : "none";
+    }
+  };
+
+  // Load data
+  listEl.innerHTML = `<p class="small">Loading episodes…</p>`;
+  state.all = await loadAllEpisodes();
+
+  // Sort newest first
+  state.all.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  paint();
+
+  // Events: search
+  if (searchEl) {
+    searchEl.addEventListener("input", (e) => {
+      state.q = e.target.value || "";
+      // If searching, we don't need "See more" limitation
+      paint();
+    });
   }
 
-  qsa("[data-season]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      qsa("[data-season]").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      activeSeason = btn.dataset.season;
-      apply();
+  // Events: season chips
+  chips.forEach(ch => {
+    ch.addEventListener("click", () => {
+      chips.forEach(c => c.classList.remove("active"));
+      ch.classList.add("active");
+
+      state.season = ch.getAttribute("data-season") || "all";
+      state.showAll = false; // reset to latest 9 on category change
+      paint();
     });
   });
 
-  if (searchEl) searchEl.addEventListener("input", apply);
-  apply();
+  // Events: load more
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      state.showAll = true;
+      paint();
+      // optional: scroll a bit to keep context
+      // window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 }
-
 export async function renderEpisodeDetail() {
   const detailEl = qs("#episode-detail");
   if (!detailEl) return;
