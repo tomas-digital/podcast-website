@@ -1,20 +1,55 @@
-import { loadAllEpisodes, loadSeason, loadShorts, esc } from "./data.js";
+// assets/js/app.js
+import { loadAllEpisodes, loadShorts, esc } from "./data.js";
 
 function qs(sel) { return document.querySelector(sel); }
-function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+function extractYouTubeId(url) {
+  const u = String(url || "");
+  let m = u.match(/v=([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  m = u.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  m = u.match(/embed\/([a-zA-Z0-9_-]{6,})/);
+  if (m) return m[1];
+  return "";
+}
+
+function spotifyEmbedUrl(url) {
+  const u = String(url || "");
+  if (!u) return "";
+  if (u.includes("/embed/")) return u;
+  return u.replace("open.spotify.com/", "open.spotify.com/embed/");
+}
+
+function youtubeIdFromUrl(url) {
+  if (!url) return "";
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+    return m ? m[1] : "";
+  } catch {
+    const m = (url || "").match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+    return m ? m[1] : "";
+  }
+}
 
 function episodeCard(ep) {
   const season = ep.season ? `Season ${ep.season}` : "Season";
   const epNum = (ep.episode ?? ep.episode === 0) ? `EP ${ep.episode}` : "EP";
   const title = esc(ep.title || "Untitled episode");
   const date = esc(ep.date || "");
-  const thumb = ep.thumbnail || "https://via.placeholder.com/640x360?text=Episode";
+  const thumb = ep.thumbnail || (ep.youtube ? `https://img.youtube.com/vi/${youtubeIdFromUrl(ep.youtube)}/hqdefault.jpg` : "");
   const hasYT = !!ep.youtube;
   const hasSP = !!ep.spotify;
 
   return `
     <article class="card">
-      <img class="thumb" src="${thumb}" alt="${title}">
+      <div class="thumb" style="background:#0b0d10;">
+        ${thumb ? `<img src="${esc(thumb)}" alt="${title}" style="width:100%;height:100%;object-fit:cover;display:block;">` : ""}
+      </div>
+
       <div class="card-body">
         <h3 class="card-title">${title}</h3>
         <div class="meta">
@@ -22,6 +57,7 @@ function episodeCard(ep) {
           <span class="badge">${epNum}</span>
           ${date ? `<span class="badge">${date}</span>` : ""}
         </div>
+
         <div class="actions">
           <a class="btn primary" href="episode.html?id=${encodeURIComponent(ep.id)}">Open</a>
           ${hasYT ? `<a class="btn green" href="${esc(ep.youtube)}" target="_blank" rel="noopener">Watch</a>` : ""}
@@ -32,6 +68,9 @@ function episodeCard(ep) {
   `;
 }
 
+/* =========================
+   HOME
+========================= */
 export async function renderHome() {
   const latestEl = qs("#latest-episode");
   const listEl = qs("#latest-episodes");
@@ -41,7 +80,7 @@ export async function renderHome() {
   const latest = all[0];
 
   if (!latest) {
-    latestEl.innerHTML = `<p class="small">No episodes yet. (RSS/JSON will populate this later)</p>`;
+    latestEl.innerHTML = `<p class="small">No episodes yet.</p>`;
     listEl.innerHTML = "";
     return;
   }
@@ -81,6 +120,9 @@ export async function renderHome() {
   listEl.innerHTML = `<div class="grid">${last6.map(episodeCard).join("")}</div>`;
 }
 
+/* =========================
+   EPISODES PAGE (9 latest + See more)
+========================= */
 export async function renderEpisodesPage() {
   const listEl = document.getElementById("episodes-list");
   const searchEl = document.getElementById("search");
@@ -101,30 +143,14 @@ export async function renderEpisodesPage() {
 
   const norm = (s) => (s || "").toString().toLowerCase().trim();
 
-  const youtubeIdFromUrl = (url) => {
-    if (!url) return null;
-    try {
-      const u = new URL(url);
-      if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
-      if (u.searchParams.get("v")) return u.searchParams.get("v");
-      const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
-      return m ? m[1] : null;
-    } catch {
-      const m = (url || "").match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
-      return m ? m[1] : null;
-    }
-  };
-
   const applyFilters = () => {
     let items = [...state.all];
 
-    // season filter
     if (state.season !== "all") {
       const s = Number(state.season);
       items = items.filter(e => Number(e.season) === s);
     }
 
-    // search filter
     if (state.q) {
       const q = norm(state.q);
       items = items.filter(e => {
@@ -141,104 +167,52 @@ export async function renderEpisodesPage() {
       listEl.innerHTML = `<p class="small">Нема резултати.</p>`;
       return;
     }
-
-    listEl.innerHTML = `
-      <div class="grid">
-        ${items.map(ep => {
-          const ytId = youtubeIdFromUrl(ep.youtube);
-          const thumb = ep.thumbnail || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "");
-          const date = ep.date || "";
-          const season = ep.season ?? "";
-          const episode = ep.episode ?? "";
-          const title = ep.title || "Untitled episode";
-
-          return `
-            <article class="card">
-              <a href="episode.html?id=${encodeURIComponent(ep.id)}" style="text-decoration:none;color:inherit;">
-                <div class="thumb" style="background:#0b0d10;">
-                  ${thumb ? `<img src="${thumb}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">` : ""}
-                </div>
-
-                <div class="card-body">
-                  <div class="meta" style="margin-bottom:10px;">
-                    <span class="badge">Season ${season}</span>
-                    <span class="badge">EP ${episode}</span>
-                    ${date ? `<span class="badge">${date}</span>` : ""}
-                  </div>
-
-                  <h3 class="card-title">${title}</h3>
-                  <p class="small">${(ep.description || "").slice(0, 120)}${(ep.description || "").length > 120 ? "…" : ""}</p>
-
-                  <div class="actions" style="margin-top:12px;">
-                    <span class="btn primary">Open</span>
-                    ${ep.youtube ? `<span class="btn ghost">Watch</span>` : ""}
-                  </div>
-                </div>
-              </a>
-            </article>
-          `;
-        }).join("")}
-      </div>
-    `;
+    listEl.innerHTML = `<div class="grid">${items.map(episodeCard).join("")}</div>`;
   };
 
   const paint = () => {
     applyFilters();
-
     const total = state.filtered.length;
-    const shouldLimit = !state.showAll && !state.q; 
-    // ^ if user is searching, show all matching results (better UX)
+    const shouldLimit = !state.showAll && !state.q;
 
     const visible = shouldLimit ? state.filtered.slice(0, state.initialCount) : state.filtered;
-
     renderCards(visible);
 
-    // Show/hide "See more"
     if (loadMoreWrap) {
       const needBtn = shouldLimit && total > state.initialCount;
       loadMoreWrap.style.display = needBtn ? "flex" : "none";
     }
   };
 
-  // Load data
   listEl.innerHTML = `<p class="small">Loading episodes…</p>`;
   state.all = await loadAllEpisodes();
-
-  // Sort newest first
-  state.all.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   paint();
 
-  // Events: search
-  if (searchEl) {
-    searchEl.addEventListener("input", (e) => {
-      state.q = e.target.value || "";
-      // If searching, we don't need "See more" limitation
-      paint();
-    });
-  }
+  searchEl?.addEventListener("input", (e) => {
+    state.q = e.target.value || "";
+    paint();
+  });
 
-  // Events: season chips
   chips.forEach(ch => {
     ch.addEventListener("click", () => {
       chips.forEach(c => c.classList.remove("active"));
       ch.classList.add("active");
 
       state.season = ch.getAttribute("data-season") || "all";
-      state.showAll = false; // reset to latest 9 on category change
+      state.showAll = false;
       paint();
     });
   });
 
-  // Events: load more
-  if (loadMoreBtn) {
-    loadMoreBtn.addEventListener("click", () => {
-      state.showAll = true;
-      paint();
-      // optional: scroll a bit to keep context
-      // window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
+  loadMoreBtn?.addEventListener("click", () => {
+    state.showAll = true;
+    paint();
+  });
 }
+
+/* =========================
+   EPISODE DETAIL
+========================= */
 export async function renderEpisodeDetail() {
   const detailEl = qs("#episode-detail");
   if (!detailEl) return;
@@ -303,49 +277,70 @@ export async function renderEpisodeDetail() {
   `;
 }
 
-function renderShorts(shorts){
+/* =========================
+   SHORTS (HOME) - 6 + "See more"
+========================= */
+let shortsVisible = 6;
+let allShorts = [];
+
+function renderShorts(){
   const row = document.querySelector(".shorts-row");
+  const btn = document.getElementById("shorts-more");
   if (!row) return;
 
-  if (!shorts || shorts.length === 0){
-    // keep your placeholders
+  const shown = allShorts.slice(0, shortsVisible);
+
+  row.innerHTML = shown.map(s => `
+    <a class="short-card" href="${esc(s.url || "#")}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+      <div class="short-thumb">
+        <img src="${esc(s.thumbnail || "")}" alt="">
+      </div>
+      <div class="label">${esc(s.title || "")}</div>
+    </a>
+  `).join("");
+
+  if (btn){
+    btn.style.display = shortsVisible < allShorts.length ? "inline-flex" : "none";
+  }
+}
+
+async function initShorts(){
+  const row = document.querySelector(".shorts-row");
+  if (!row) return; // only on pages with shorts section
+
+  try{
+    allShorts = await loadShorts();
+  }catch(e){
+    console.warn("Shorts failed to load:", e);
+    allShorts = [];
+  }
+
+  if (!Array.isArray(allShorts) || allShorts.length === 0){
     return;
   }
 
-  const latest6 = shorts.slice(0, 6);
+  // newest first (if date exists)
+  allShorts.sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")));
 
-  row.innerHTML = latest6.map(s => `
-    <a class="short-card" href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
-      <div class="short-thumb">
-        <img src="${s.thumbnail}" alt="">
-      </div>
-      <div class="label">${s.title}</div>
-    </a>
-  `).join("");
+  renderShorts();
+
+  const btn = document.getElementById("shorts-more");
+  btn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    shortsVisible += 6;
+    renderShorts();
+  });
 }
 
-// inside your existing home init:
-(async () => {
-  const shorts = await loadShorts();
-  renderShorts(shorts);
-})();
+/* =========================
+   ROUTER / INIT
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  // run based on what's on the page
+  if (qs("#latest-episode") && qs("#latest-episodes")) renderHome();
+  if (qs("#episodes-list")) renderEpisodesPage();
+  if (qs("#episode-detail")) renderEpisodeDetail();
 
-
-function extractYouTubeId(url) {
-  // supports watch?v=, youtu.be/, /embed/
-  const u = String(url);
-  let m = u.match(/v=([a-zA-Z0-9_-]{6,})/);
-  if (m) return m[1];
-  m = u.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
-  if (m) return m[1];
-  m = u.match(/embed\/([a-zA-Z0-9_-]{6,})/);
-  if (m) return m[1];
-  return "";
-}
-
-function spotifyEmbedUrl(url) {
-  // Accept episode or show links and convert to embed
-  const u = String(url);
-  if (u.includes("/embed/")) return u;
-  return u.replace("open.spotify.com/", "open.spotify.com/embed/");
-}
+  // safe on all pages
+  initShorts();
+});
