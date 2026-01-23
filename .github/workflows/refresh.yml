@@ -21,25 +21,20 @@ jobs:
         with:
           node-version: "20"
 
+      # ===============================
+      # SEASONS (existing logic)
+      # ===============================
       - name: Fetch RSS and build season JSON files
         env:
-          # Season 1 (2 playlists)
           S1_PLAYLIST_IDS: "PLQ2KC6ajwSZy8sGySpuCkd4mZOZ14LHdW,PLQ2KC6ajwSZy0vGyHwGvLQdkUo7GraXKw"
-
-          # Season 2 (2 playlists)
           S2_PLAYLIST_IDS: "PLQ2KC6ajwSZzb6rS8wiz5q2uB5AzuYwOZ,PLQ2KC6ajwSZxUmuSC_6Y8x13yXssDTgZe"
         run: |
           node - <<'NODE'
           const fs = require("fs");
-          const path = require("path");
 
           async function fetchText(url) {
-            const res = await fetch(url, {
-              headers: { "User-Agent": "Mozilla/5.0" }
-            });
-            if (!res.ok) {
-              throw new Error(`Fetch failed ${res.status} for ${url}`);
-            }
+            const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+            if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
             return await res.text();
           }
 
@@ -63,113 +58,118 @@ jobs:
           }
 
           function parseEntries(feedXml) {
-            return feedXml
-              .split("<entry>")
-              .slice(1)
-              .map(x => x.split("</entry>")[0]);
+            return feedXml.split("<entry>").slice(1).map(x => x.split("</entry>")[0]);
           }
 
           function extractEpNumber(title) {
-            const t = title || "";
-            let m = t.match(/\bEP\s*([0-9]{1,3})\b/i);
-            if (m) return Number(m[1]);
-            m = t.match(/\bEpisode\s*([0-9]{1,3})\b/i);
-            if (m) return Number(m[1]);
-            return null;
+            const m = title?.match(/\bEP\s*([0-9]{1,3})\b/i);
+            return m ? Number(m[1]) : null;
           }
 
           function itemsFromFeed(feedXml, seasonNumber) {
-            const entries = parseEntries(feedXml);
-
-            return entries.map(entry => {
+            return parseEntries(feedXml).map(entry => {
               const title = decodeXml(tag(entry, "title"));
               const published = tag(entry, "published");
               const date = published ? published.slice(0, 10) : null;
-
               const videoId = tag(entry, "yt:videoId");
 
               const linkTag = entry.match(/<link[^>]+>/)?.[0] || "";
-              const youtube =
-                attr(linkTag, "href") ||
-                (videoId ? `https://www.youtube.com/watch?v=${videoId}` : "");
+              const youtube = attr(linkTag, "href") || `https://www.youtube.com/watch?v=${videoId}`;
 
               const description = decodeXml(tag(entry, "media:description"));
-
               const thumbTag = entry.match(/<media:thumbnail[^>]+>/)?.[0] || "";
-              const thumbnail =
-                attr(thumbTag, "url") ||
-                (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "");
+              const thumbnail = attr(thumbTag, "url") || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
               const ep = extractEpNumber(title);
-              const id =
-                ep !== null
-                  ? `s${seasonNumber}e${ep}`
-                  : `s${seasonNumber}-${videoId || Math.random().toString(36).slice(2)}`;
+              const id = ep ? `s${seasonNumber}e${ep}` : `s${seasonNumber}-${videoId}`;
 
-              return {
-                id,
-                season: seasonNumber,
-                episode: ep,
-                title,
-                date,
-                youtube,
-                thumbnail,
-                description,
-                videoId
-              };
+              return { id, season: seasonNumber, episode: ep, title, date, youtube, thumbnail, description, videoId };
             });
           }
 
-          async function buildSeason(seasonNumber, playlistIdsCsv) {
-            const ids = String(playlistIdsCsv)
-              .split(",")
-              .map(s => s.trim())
-              .filter(Boolean);
-
-            if (!ids.length) {
-              throw new Error(`No playlist IDs provided for season ${seasonNumber}`);
-            }
-
-            const xmlFeeds = await Promise.all(
-              ids.map(id =>
-                fetchText(`https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(id)}`)
+          async function buildSeason(seasonNumber, playlists) {
+            const feeds = await Promise.all(
+              playlists.split(",").map(id =>
+                fetchText(`https://www.youtube.com/feeds/videos.xml?playlist_id=${id.trim()}`)
               )
             );
 
-            // Merge + de-duplicate by videoId
             const map = new Map();
-            for (const xml of xmlFeeds) {
-              for (const item of itemsFromFeed(xml, seasonNumber)) {
-                const key = item.videoId || item.youtube || item.id;
-                map.set(key, item);
-              }
-            }
+            feeds.forEach(xml => {
+              itemsFromFeed(xml, seasonNumber).forEach(i => map.set(i.videoId, i));
+            });
 
-            const items = Array.from(map.values());
-            items.sort((a, b) =>
-              String(b.date || "").localeCompare(String(a.date || ""))
-            );
-
-            // Remove helper field
-            return items.map(({ videoId, ...rest }) => rest);
+            return [...map.values()]
+              .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+              .map(({ videoId, ...rest }) => rest);
           }
 
           (async () => {
-            const season1 = await buildSeason(1, process.env.S1_PLAYLIST_IDS);
-            const season2 = await buildSeason(2, process.env.S2_PLAYLIST_IDS);
+            const s1 = await buildSeason(1, process.env.S1_PLAYLIST_IDS);
+            const s2 = await buildSeason(2, process.env.S2_PLAYLIST_IDS);
 
             fs.mkdirSync("data", { recursive: true });
-            fs.writeFileSync("data/season1.json", JSON.stringify(season1, null, 2));
-            fs.writeFileSync("data/season2.json", JSON.stringify(season2, null, 2));
+            fs.writeFileSync("data/season1.json", JSON.stringify(s1, null, 2));
+            fs.writeFileSync("data/season2.json", JSON.stringify(s2, null, 2));
 
-            console.log(`season1.json → ${season1.length} episodes`);
-            console.log(`season2.json → ${season2.length} episodes`);
-          })().catch(err => {
-            console.error(err);
-            process.exit(1);
-          });
+            console.log(`Season 1: ${s1.length}`);
+            console.log(`Season 2: ${s2.length}`);
+          })();
           NODE
 
+      # ===============================
+      # SHORTS (NEW)
+      # ===============================
+      - name: Fetch Shorts playlist RSS
+        run: |
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const PLAYLIST_ID = "PLQ2KC6ajwSZxf5fdSpF9CQpVTTZSklN9k";
+          const RSS = `https://www.youtube.com/feeds/videos.xml?playlist_id=${PLAYLIST_ID}`;
+
+          async function fetchText(url){
+            const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }});
+            return await res.text();
+          }
+
+          function tag(xml, name){
+            const m = xml.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`));
+            return m ? m[1].trim() : "";
+          }
+
+          function attr(xml, name){
+            const m = xml.match(new RegExp(`${name}="([^"]+)"`));
+            return m ? m[1] : "";
+          }
+
+          (async () => {
+            const xml = await fetchText(RSS);
+            const entries = xml.split("<entry>").slice(1);
+
+            const shorts = entries.map(e => {
+              const videoId = tag(e, "yt:videoId");
+              const title = tag(e, "title");
+              const published = tag(e, "published");
+              const thumbTag = e.match(/<media:thumbnail[^>]+>/)?.[0] || "";
+
+              return {
+                id: videoId,
+                title,
+                date: published?.slice(0,10),
+                url: `https://www.youtube.com/watch?v=${videoId}`,
+                thumbnail: attr(thumbTag, "url") || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+              };
+            });
+
+            fs.writeFileSync("data/shorts.json", JSON.stringify(shorts.slice(0,50), null, 2));
+            console.log(`Shorts: ${shorts.length}`);
+          })();
+          NODE
+
+      # ===============================
+      # COMMIT
+      # ===============================
       - name: Commit JSON updates
         run: |
           if git diff --quiet; then
@@ -178,6 +178,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/season1.json data/season2.json
-          git commit -m "Auto-update seasons from YouTube RSS"
+          git add data/*.json
+          git commit -m "chore: refresh podcast data from YouTube RSS"
           git push
