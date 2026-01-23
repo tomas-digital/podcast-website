@@ -659,12 +659,6 @@ button{ font-family:inherit; }
     260px 720px 0 160px rgba(245,200,76,.06);
 }
 
-header,
-main,
-footer{
-  position: relative;
-  z-index: 1;
-}
 
 @keyframes floatSlow{
   0%{ transform: translateY(0); }
