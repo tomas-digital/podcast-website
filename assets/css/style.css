@@ -667,6 +667,44 @@ header, main, footer{
   position: relative;
   z-index: 1;
 }
+/* ===== Badge rows with icons ===== */
+.badge-row{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.badge-split{
+  justify-content: space-between;
+}
+
+.badge-left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0; /* allow text to shrink */
+}
+
+.badge-icon{
+  width: 16px;
+  height: 16px;
+  display:block;
+  opacity: .9;
+}
+
+.badge-text{
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* On small screens let email wrap nicely */
+@media (max-width: 520px){
+  .badge-text{ white-space: normal; }
+  .badge-split{ flex-wrap: wrap; gap: 10px; }
+}
 
 
 
