@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="mk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Сите епизоди · Про✔еритас</title>
+  <meta name="description" content="Комплетна архива на епизоди по сезони." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+
+<body>
+  <div class="bg-bubbles" aria-hidden="true"></div>
+  <header class="header">
+    <div class="header-inner">
+      <nav class="nav-left">
+        <a href="index.html">Почетна</a>
+        <a class="active" href="episodes.html">Сите епизоди</a>
+        <a href="about.html">За нас</a>
+        <a href="contact.html">Контакт</a>
+      </nav>
+
+     
+      <div class="brand">
+  <a href="index.html" class="logo-link" aria-label="Proveritas Home">
+    <img src="assets/img/logo.svg" alt="Proveritas logo" class="logo">
+  </a>
+</div>
+    </div>
+  </header>
+
+  <main class="container" class="page-gradient">
+    <section class="section" style="padding-top:34px;">
+      <h1 class="section-title" style="font-size:38px;margin-bottom:10px;">Сите епизоди</h1>
+      <p class="section-subtitle">
+        Истражете ја целата наша колекција дискусии, анализи и разговори за најважните теми.
+      </p>
+
+      <!-- Toolbar (search + season chips) -->
+      <div class="toolbar" style="margin-top:18px;">
+        <input id="search" class="search" type="search" placeholder="Пребарај епизоди..." />
+
+        <div class="filters">
+          <button class="chip active" data-season="all">Сите</button>
+          <button class="chip" data-season="1">Сезона 1</button>
+          <button class="chip" data-season="2">Сезона 2</button>
+        </div>
+      </div>
+
+      <!-- JS renders cards here -->
+      <div id="episodes-list">
+        <div id="pagination" style="margin-top:18px;">
+        <p class="small">Loading episodes...</p>
+        </div>
+      </div>
+      <div id="load-more-wrap" style="margin-top:18px; display:flex; justify-content:center;">
+  <button id="load-more" class="btn ghost" type="button">Види повеќе</button>
+</div>
+
+    </section>
+
+    <!-- Shorts placeholder like old page bottom -->
+    <section class="section">
+      <h2 class="section-title">Кратки содржини</h2>
+      <p class="section-subtitle">Брзи анализи и проверени факти во кратки формати.</p>
+
+      <div class="shorts-wrap">
+        <div class="shorts-row">
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+          <div class="short-card"><div class="label">Shorts (soon)</div></div>
+        </div>
+        <div class="shorts-note">
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px; justify-content:center;">
+  <button id="shorts-more" class="btn ghost">Види повеќе кратки</button>
+</div>
+
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+  <img src="assets/img/logo.svg" alt="Proveritas logo" class="footer-logo">
+  <p class="small">
+     Македонски подкаст кој ги анализира важните случувања, разоткрива лажни вести и
+          поттикнува критичко размислување.
+  </p>
+</div>
+      <div>
+        <h4>Навигација</h4>
+        <p><a href="index.html">Почетна</a></p>
+        <p><a href="episodes.html">Сите епизоди</a></p>
+        <p><a href="about.html">За нас</a></p>
+        <p><a href="contact.html">Контакт</a></p>
+      </div>
+
+      <div>
+        <h4>Контакт</h4>
+        <p>✉️ contact@proveritas.mk</p>
+        <p>📍 Скопје, Северна Македонија</p>
+      </div>
+
+      <div>
+        <h4>Следете нè</h4>
+        <div class="social-links">
+  <a href="https://www.youtube.com/@proveritas_official" target="_blank" aria-label="YouTube">
+    <img src="assets/icons/youtube.svg" alt="">
+  </a>
+  <a href="https://www.facebook.com/proveritaspodcast/" target="_blank" aria-label="Facebook">
+    <img src="assets/icons/facebook.svg" alt="">
+  </a>
+  <a href="https://www.instagram.com/proveritasofficial/" target="_blank" aria-label="Instagram">
+    <img src="assets/icons/instagram.svg" alt="">
+  </a>
+  <a href="https://www.tiktok.com/@proveritas.official" target="_blank" aria-label="TikTok">
+    <img src="assets/icons/tiktok.svg" alt="">
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © <span id="year"></span> Proveritas. Сите права се задржани.
+    </div>
+  </footer>
+
+
+  <script type="module">
+    import { renderEpisodesPage } from "./assets/js/app.js";
+    document.getElementById("year").textContent = new Date().getFullYear();
+    renderEpisodesPage();
+  </script>
+</body>
+</html>
