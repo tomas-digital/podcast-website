@@ -1,4 +1,4 @@
-import { loadAllEpisodes, loadSeason, esc } from "./data.js";
+import { loadAllEpisodes, loadSeason, loadShorts, esc } from "./data.js";
 
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
@@ -302,6 +302,34 @@ export async function renderEpisodeDetail() {
     </div>
   `;
 }
+
+function renderShorts(shorts){
+  const row = document.querySelector(".shorts-row");
+  if (!row) return;
+
+  if (!shorts || shorts.length === 0){
+    // keep your placeholders
+    return;
+  }
+
+  const latest6 = shorts.slice(0, 6);
+
+  row.innerHTML = latest6.map(s => `
+    <a class="short-card" href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+      <div class="short-thumb">
+        <img src="${s.thumbnail}" alt="">
+      </div>
+      <div class="label">${s.title}</div>
+    </a>
+  `).join("");
+}
+
+// inside your existing home init:
+(async () => {
+  const shorts = await loadShorts();
+  renderShorts(shorts);
+})();
+
 
 function extractYouTubeId(url) {
   // supports watch?v=, youtu.be/, /embed/
